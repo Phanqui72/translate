@@ -1,0 +1,337 @@
+/* ==========================================================================
+   1. VARIABLES & GLOBAL STYLES
+   ========================================================================== */
+
+:root {
+    --color-primary: #4a90e2;
+    --color-primary-dark: #357abd;
+    --color-background-darkest: #101728;
+    --color-background-dark: #16213e;
+    --color-background-light: #1e3a5f;
+    --color-border: #0f3460;
+    --color-text-primary: #e0e0e0;
+    --color-text-secondary: #a0a0b0;
+    --color-text-placeholder: #6a788e;
+
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --border-radius: 8px;
+    --transition-speed: 0.3s;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--color-background-darkest);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Aligns to top for longer content */
+    min-height: 100vh;
+    margin: 0;
+    padding: 40px 20px;
+}
+
+/* ==========================================================================
+   2. MAIN CONTAINER & LAYOUT
+   ========================================================================== */
+
+.translator-container {
+    width: 100%;
+    max-width: 850px;
+    background-color: var(--color-background-dark);
+    padding: 30px 40px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   3. HEADER
+   ========================================================================== */
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header .logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+header h1 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 600;
+}
+
+header p {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin: 8px 0 0;
+}
+
+/* ==========================================================================
+   4. TABS NAVIGATION
+   ========================================================================== */
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 25px;
+}
+
+.tab-link {
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent; /* Placeholder for active state */
+    color: var(--color-text-secondary);
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: -1px; /* Overlap the container border */
+}
+
+.tab-link:hover {
+    color: var(--color-text-primary);
+}
+
+.tab-link.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.tab-content {
+    display: none;
+}
+
+/* ==========================================================================
+   5. COMMON FORM ELEMENTS (Shared Styles)
+   ========================================================================== */
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.language-selectors {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.from-language, .to-language {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+select, input[type="url"] {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--color-background-light);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    border-radius: var(--border-radius);
+    font-size: 15px;
+    transition: all var(--transition-speed) ease;
+}
+
+select:focus, input[type="url"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+.swap-button {
+    background: var(--color-background-light);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px; /* Align with select boxes */
+    transition: all var(--transition-speed) ease;
+}
+
+.swap-button:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.translate-button {
+    padding: 15px;
+    background: var(--color-primary);
+    border: none;
+    border-radius: var(--border-radius);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease;
+}
+
+.translate-button:hover {
+    background-color: var(--color-primary-dark);
+}
+
+/* Common input/output area */
+.io-areas, .text-areas {
+    display: flex;
+    gap: 20px;
+}
+
+textarea, .output-area {
+    flex: 1;
+    height: 180px;
+    background-color: var(--color-border);
+    border: 1px solid var(--color-background-light);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    color: var(--color-text-primary);
+    font-size: 16px;
+    resize: none;
+    transition: all var(--transition-speed) ease;
+}
+
+textarea:focus, .output-area:focus {
+     outline: none;
+    border-color: var(--color-primary);
+}
+
+textarea::placeholder {
+    color: var(--color-text-placeholder);
+}
+
+/* Common upload area */
+.upload-area {
+    flex: 1;
+    border: 2px dashed var(--color-background-light);
+    border-radius: var(--border-radius);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    padding: 20px;
+}
+.upload-area:hover {
+    border-color: var(--color-primary);
+    background-color: rgba(74, 144, 226, 0.05);
+}
+
+.upload-area label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+.upload-area label i {
+    margin-bottom: 12px;
+    color: var(--color-text-secondary);
+    font-size: 2rem;
+}
+.upload-area label span {
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   6. SPECIFIC TAB STYLES
+   ========================================================================== */
+
+/* --- Audio Tab --- */
+.audio-container {
+    text-align: center;
+    padding: 20px 0;
+}
+.audio-instruction {
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+}
+.mic-button {
+    background: var(--color-primary);
+    border: none;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    color: white;
+    cursor: pointer;
+    margin: 20px 0;
+    transition: all var(--transition-speed) ease;
+}
+.mic-button:hover {
+    background-color: var(--color-primary-dark);
+    transform: scale(1.05);
+}
+.transcription-area {
+    width: 100%;
+    height: 120px;
+    margin-top: 20px;
+}
+
+/* --- Video Tab --- */
+.upload-area.large {
+    width: 100%;
+    height: 280px;
+}
+
+/* --- Web Tab --- */
+.web-input-bar {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end;
+}
+.url-input {
+    flex-grow: 1;
+}
+.web-output-area {
+    width: 100%;
+    height: 350px;
+    background-color: var(--color-border);
+    border: 1px solid var(--color-background-light);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    color: var(--color-text-placeholder);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   7. FOOTER
+   ========================================================================== */
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
