@@ -348,3 +348,47 @@ footer {
 .download-link:hover {
     background-color: var(--color-primary-dark);
 }
+
+/* Thêm vào cuối file css/style.css */
+.web-output-container {
+    width: 100%;
+    height: 400px; /* Hoặc chiều cao bạn muốn */
+    margin-top: 20px;
+    border: 1px solid var(--color-background-light);
+    border-radius: var(--border-radius);
+    background-color: var(--color-border);
+}
+
+#web-output-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--border-radius);
+}
+#web-output-area {
+    width: 100%;
+    height: 400px; /* Chiều cao mong muốn */
+    margin-top: 20px;
+    font-size: 14px; /* Chỉnh kích thước font nếu cần */
+}
+/* ==========================================================================
+   8. SPECIFIC ELEMENT OVERRIDES (Thêm vào cuối file)
+   ========================================================================== */
+
+/* Tăng kích thước mặc định cho tất cả các ô textarea */
+.text-areas textarea,
+.transcription-area,
+#web-output-area {
+    height: 300px; /* Tăng chiều cao mặc định lên 300px */
+}
+
+/* Cho phép người dùng có thể thay đổi kích thước ô textarea theo chiều dọc */
+textarea {
+    resize: vertical; /* Chỉ cho phép kéo thả theo chiều dọc */
+}
+
+/* Tùy chỉnh riêng cho ô kết quả dịch web nếu cần */
+#web-output-area {
+    min-height: 250px; /* Chiều cao tối thiểu */
+    max-height: 60vh; /* Chiều cao tối đa là 60% chiều cao màn hình */
+}

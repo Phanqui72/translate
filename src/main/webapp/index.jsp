@@ -208,29 +208,30 @@
         </form>
     </div>
 
-    <!-- Web Translation Tab -->
-    <div id="Web" class="tab-content">
-       <form action="translate" method="post">
-           <input type="hidden" name="type" value="web">
-           <div class="web-input-bar">
-               <div class="url-input">
-                   <label for="website-url">Website URL</label>
-                   <input type="url" id="website-url" name="websiteUrl" placeholder="https://example.com">
+    <!-- Web Translation Tab - CÓ THAY ĐỔI -->
+        <div id="Web" class="tab-content">
+           <form id="web-translation-form" action="translate" method="post">
+               <input type="hidden" name="type" value="web">
+               <div class="web-input-bar">
+                   <div class="url-input">
+                       <label for="website-url">Website URL</label>
+                       <input type="url" id="website-url" name="websiteUrl" placeholder="https://example.com" required>
+                   </div>
+                   <div class="to-language">
+                       <label for="to-lang-web">Translate To</label>
+                        <select id="to-lang-web" name="toLang">
+                            <option value="vi">Vietnamese</option>
+                            <option value="en">English</option>
+                        </select>
+                   </div>
                </div>
-               <div class="to-language">
-                   <label for="to-lang-web">Translate To</label>
-                    <select id="to-lang-web" name="toLang">
-                        <option value="vi">Vietnamese</option>
-                        <option value="en">English</option>
-                    </select>
-               </div>
-           </div>
-           <button type="submit" class="translate-button">Translate Website</button>
-           <div class="web-output-area">
-               Translated website content will appear here...
-           </div>
-       </form>
-    </div>
+               <button type="submit" class="translate-button">Translate Website</button>
+
+               <!-- **THAY ĐỔI: Sử dụng TEXTAREA thay cho iframe** -->
+               <textarea id="web-output-area" class="transcription-area" readonly placeholder="Translated website content will appear here..."></textarea>
+
+           </form>
+        </div>
 
     <footer>
         <p>Translate with Google Cloud Translate API by QUI </p>
@@ -238,38 +239,62 @@
 
 </div>
 
+<!-- ==========================================================================
+   KHỐI JAVASCRIPT DUY NHẤT VÀ ĐÃ ĐƯỢC TỔ CHỨC LẠI
+   ========================================================================== -->
 <script>
-    // Hàm chuyển tab (giữ nguyên)
-    function openTab(evt, tabName) {
-            var i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-            }
-            tablinks = document.getElementsByClassName("tab-link");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
-            }
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
-        }
+    // ----------------- CHỨC NĂNG CHUNG -----------------
 
-    // (AJAX cho form dịch text - giữ nguyên)
-    document.getElementById('text-translation-form').addEventListener('submit', function(event) {
+    // Hàm chuyển tab
+    function openTab(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        tablinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].className = tablinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    // Hàm tráo đổi ngôn ngữ
+    document.querySelectorAll('.swap-button').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const container = event.currentTarget.closest('.tab-content');
+            if (!container) return;
+            const fromSelect = container.querySelector('.from-language select');
+            const toSelect = container.querySelector('.to-language select');
+            const tempLang = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = tempLang;
+            const fromTextArea = container.querySelector('#inputText');
+            const toTextArea = container.querySelector('#outputText');
+            if (fromTextArea && toTextArea) {
+                const tempText = fromTextArea.value;
+                fromTextArea.value = toTextArea.value;
+                toTextArea.value = tempText;
+            }
+        });
+    });
+
+    // ----------------- LOGIC CHO TỪNG TAB -----------------
+
+    // --- TAB: TEXT ---
+    document.getElementById('text-translation-form').addEventListener('submit', function (event) {
         event.preventDefault();
         const form = event.target;
         const formData = new FormData(form);
         const outputTextarea = document.getElementById('outputText');
         outputTextarea.value = 'Translating...';
-
         fetch(form.action, {
             method: form.method,
             body: new URLSearchParams(formData)
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Network response was not ok');
             return response.text();
         })
         .then(translatedText => {
@@ -281,175 +306,113 @@
         });
     });
 
-    // Thêm JavaScript cho nút SWAP ***
-    document.querySelectorAll('.swap-button').forEach(button => {
-        button.addEventListener('click', (event) => {
-            // Tìm các thành phần bên trong tab hiện tại
-            const container = event.currentTarget.closest('.tab-content');
-            if (!container) return;
+    // --- TAB: IMAGE ---
+    const imageUploadInput = document.getElementById('image-upload');
+    const imageUploadLabel = document.getElementById('image-upload-label');
+    imageUploadInput.addEventListener('change', function () {
+        if (this.files && this.files.length > 0) {
+            imageUploadLabel.innerHTML = '<i class="fas fa-file-image fa-2x"></i><p>' + this.files[0].name + '</p><span>Click again to change</span>';
+        } else {
+            imageUploadLabel.innerHTML = '<i class="fas fa-upload fa-2x"></i><p>Click to upload an image</p><span>PNG, JPG, WEBP</span>';
+        }
+    });
 
-            const fromSelect = container.querySelector('.from-language select');
-            const toSelect = container.querySelector('.to-language select');
-
-            // 1. Tráo đổi ngôn ngữ đã chọn
-            const tempLang = fromSelect.value;
-            fromSelect.value = toSelect.value;
-            toSelect.value = tempLang;
-
-            // 2. Tráo đổi văn bản trong ô input/output (chỉ áp dụng cho tab Text)
-            const fromTextArea = container.querySelector('#inputText');
-            const toTextArea = container.querySelector('#outputText');
-            if (fromTextArea && toTextArea) {
-                const tempText = fromTextArea.value;
-                fromTextArea.value = toTextArea.value;
-                toTextArea.value = tempText;
-            }
+    document.getElementById('image-translation-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const outputArea = document.getElementById('image-output-area');
+        if (!formData.get('imageFile') || formData.get('imageFile').size === 0) {
+            outputArea.textContent = 'Please select an image file first.';
+            return;
+        }
+        outputArea.textContent = 'Analyzing image and translating...';
+        fetch(form.action, {
+            method: form.method,
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Server error: ' + response.statusText);
+            return response.text();
+        })
+        .then(translatedText => {
+            outputArea.textContent = translatedText;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            outputArea.textContent = 'Error during translation. Check console for details.';
         });
     });
-     // Thêm JavaScript để hiển thị tên tệp đã chọn**
-        const imageUploadInput = document.getElementById('image-upload');
-            const imageUploadLabel = document.getElementById('image-upload-label');
-            imageUploadInput.addEventListener('change', function() {
-                if (this.files && this.files.length > 0) {
-                    // *** ĐÂY LÀ DÒNG ĐÃ SỬA LỖI ***
-                    // Chúng ta dùng phép nối chuỗi (+) thay vì template literal (``)
-                    // để tránh xung đột với JSP Expression Language.
-                    imageUploadLabel.innerHTML = '<i class="fas fa-file-image fa-2x"></i><p>' + this.files[0].name + '</p><span>Click again to change</span>';
-                } else {
-                    imageUploadLabel.innerHTML = '<i class="fas fa-upload fa-2x"></i><p>Click to upload an image</p><span>PNG, JPG, WEBP</span>';
-                }
-            });
 
-        // Thêm JavaScript AJAX để gửi form hình ảnh**
-        document.getElementById('image-translation-form').addEventListener('submit', function(event) {
-            event.preventDefault(); // Ngăn chặn tải lại trang
+    // --- TAB: AUDIO ---
+    const micButton = document.getElementById('mic-button');
+    const transcriptionArea = document.getElementById('transcription-area');
+    const audioTranslationOutput = document.getElementById('audio-translation-output');
+    const fromLangAudioSelect = document.getElementById('from-lang-audio');
+    const toLangAudioSelect = document.getElementById('to-lang-audio');
+    let isRecording = false;
+    let mediaRecorder;
+    let audioChunks = [];
 
-            const form = event.target;
-            // Sử dụng FormData là bắt buộc để gửi tệp qua AJAX
-            const formData = new FormData(form);
-            const outputArea = document.getElementById('image-output-area');
+    micButton.addEventListener('click', () => {
+        if (isRecording) {
+            if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+            micButton.classList.remove('recording');
+            isRecording = false;
+        } else {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    isRecording = true;
+                    micButton.classList.add('recording');
+                    audioChunks = [];
+                    transcriptionArea.value = "";
+                    audioTranslationOutput.value = "";
+                    transcriptionArea.placeholder = 'Recording... Click again to stop.';
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    mediaRecorder.onstop = () => {
+                        stream.getTracks().forEach(track => track.stop());
+                        if (audioChunks.length === 0) {
+                            transcriptionArea.placeholder = 'No audio recorded. Please try again.';
+                            return;
+                        }
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        transcriptionArea.placeholder = 'Processing audio... Please wait.';
+                        sendAudioToServer(audioBlob);
+                    };
+                })
+                .catch(err => {
+                    console.error("Error accessing microphone:", err);
+                    transcriptionArea.placeholder = "Could not access microphone. Please grant permission.";
+                });
+        }
+    });
 
-            // Kiểm tra xem người dùng đã chọn file chưa
-            if (!formData.get('imageFile') || formData.get('imageFile').size === 0) {
-                outputArea.textContent = 'Please select an image file first.';
-                return;
-            }
-
-            outputArea.textContent = 'Analyzing image and translating...';
-
-            fetch(form.action, {
-                method: form.method,
-                body: formData // Gửi đối tượng FormData, không cần set header Content-Type
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // Ném lỗi để .catch() có thể bắt được
-                    throw new Error(`Server error: ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(translatedText => {
-                outputArea.textContent = translatedText;
+    function sendAudioToServer(audioBlob) {
+        const formData = new FormData();
+        formData.append('type', 'audio');
+        formData.append('fromLang', fromLangAudioSelect.value);
+        formData.append('toLang', toLangAudioSelect.value);
+        formData.append('audioFile', audioBlob, 'recording.webm');
+        fetch('translate', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                transcriptionArea.value = "Transcription: " + data.transcription;
+                audioTranslationOutput.value = "Translation: " + data.translation;
             })
             .catch(error => {
-                console.error('Error:', error);
-                outputArea.textContent = 'Error during translation. Check console for details.';
+                console.error('Lỗi trong quá trình xử lý âm thanh:', error);
+                transcriptionArea.value = 'Lỗi: ' + error.message;
+                audioTranslationOutput.value = '';
             });
-        });
-         // Thêm logic hoàn chỉnh cho Tab Audio ***
-          const micButton = document.getElementById('mic-button');
-             const transcriptionArea = document.getElementById('transcription-area');
-             const audioTranslationOutput = document.getElementById('audio-translation-output');
-             const fromLangAudioSelect = document.getElementById('from-lang-audio');
-             const toLangAudioSelect = document.getElementById('to-lang-audio');
+    }
 
-             let isRecording = false;
-             let mediaRecorder;
-             let audioChunks = [];
-
-             micButton.addEventListener('click', () => {
-                 if (isRecording) {
-                     if (mediaRecorder && mediaRecorder.state === "recording") {
-                         mediaRecorder.stop();
-                     }
-                     micButton.classList.remove('recording');
-                     isRecording = false;
-                 } else {
-                     navigator.mediaDevices.getUserMedia({ audio: true })
-                         .then(stream => {
-                             isRecording = true;
-                             micButton.classList.add('recording');
-                             audioChunks = [];
-                             transcriptionArea.value = "";
-                             audioTranslationOutput.value = "";
-                             transcriptionArea.placeholder = 'Recording... Click again to stop.';
-
-                             mediaRecorder = new MediaRecorder(stream);
-                             mediaRecorder.start();
-
-                             mediaRecorder.ondataavailable = event => {
-                                 audioChunks.push(event.data);
-                             };
-
-                             mediaRecorder.onstop = () => {
-                                 // Dọn dẹp stream để tắt biểu tượng ghi âm trên tab trình duyệt
-                                 stream.getTracks().forEach(track => track.stop());
-
-                                 if (audioChunks.length === 0) {
-                                     transcriptionArea.placeholder = 'No audio recorded. Please try again.';
-                                     return;
-                                 }
-
-                                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                                 transcriptionArea.placeholder = 'Processing audio... Please wait.';
-                                 sendAudioToServer(audioBlob);
-                             };
-                         })
-                         .catch(err => {
-                             console.error("Error accessing microphone:", err);
-                             transcriptionArea.placeholder = "Could not access microphone. Please grant permission.";
-                         });
-                 }
-             });
-
-            function sendAudioToServer(audioBlob) {
-                    const formData = new FormData();
-                    formData.append('type', 'audio');
-                    formData.append('fromLang', fromLangAudioSelect.value);
-                    formData.append('toLang', toLangAudioSelect.value);
-                    formData.append('audioFile', audioBlob, 'recording.webm');
-
-                    console.log("--- BƯỚC 1: GỬI DỮ LIỆU ĐẾN SERVER ---");
-                    console.log("Đang gửi âm thanh để xử lý...");
-
-                    fetch('translate', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // **LOG: IN RA KẾT QUẢ NHẬN ĐƯỢC TỪ SERVER**
-                        console.log("--- BƯỚC 2: NHẬN KẾT QUẢ TỪ SERVER ---");
-                        console.log("Dữ liệu JSON nhận được:", data);
-
-                        if (data.error) {
-                            throw new Error(data.error);
-                        }
-                        transcriptionArea.value = "Transcription: " + data.transcription;
-                        audioTranslationOutput.value = "Translation: " + data.translation;
-                    })
-                    .catch(error => {
-                        console.error('Lỗi trong quá trình xử lý âm thanh:', error);
-                        transcriptionArea.value = 'Lỗi: ' + error.message;
-                        audioTranslationOutput.value = '';
-                    });
-                }
- // *** THÊM JAVASCRIPT CHO TAB DOCUMENT ***
-
-    // Hiển thị tên tệp đã chọn
+    // --- TAB: DOCUMENT ---
     const docUploadInput = document.getElementById('doc-upload');
-    const docUploadLabel = docUploadInput.nextElementSibling; // Lấy <label> ngay sau nó
-    docUploadInput.addEventListener('change', function() {
+    const docUploadLabel = docUploadInput.nextElementSibling;
+    docUploadInput.addEventListener('change', function () {
         if (this.files && this.files.length > 0) {
             docUploadLabel.innerHTML = '<i class="fas fa-file-alt fa-2x"></i><p>' + this.files[0].name + '</p><span>Click again to change</span>';
         } else {
@@ -457,39 +420,57 @@
         }
     });
 
-    // Xử lý gửi form bằng AJAX
-    document.querySelector('#Document form').addEventListener('submit', function(event) {
+    document.querySelector('#Document form').addEventListener('submit', function (event) {
         event.preventDefault();
-
         const form = event.target;
         const formData = new FormData(form);
-        const outputArea = form.querySelector('.output-area'); // Tìm output area trong form này
-
+        const outputArea = form.querySelector('.output-area');
         if (!formData.get('docFile') || formData.get('docFile').size === 0) {
             outputArea.innerHTML = '<p style="color: #ffcccc;">Please select a document file first.</p>';
             return;
         }
-
         outputArea.innerHTML = '<p>Uploading and translating document... This may take a moment.</p>';
-
-        fetch('translate', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            // Tạo link tải xuống
-            outputArea.innerHTML = '<p>Translation complete!</p>' +
-                                   '<a href="' + data.downloadUrl + '" download="' + data.fileName + '" class="download-link">Click here to download the translated document</a>';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            outputArea.innerHTML = '<p style="color: #ffcccc;">Error: ' + error.message + '</p>';
-        });
+        fetch('translate', { method: 'POST', body: formData })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                outputArea.innerHTML = '<p>Translation complete!</p><a href="' + data.downloadUrl + '" download="' + data.fileName + '" class="download-link">Click here to download</a>';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                outputArea.innerHTML = '<p style="color: #ffcccc;">Error: ' + error.message + '</p>';
+            });
     });
+
+    // --- TAB: WEB ---
+        // **THAY ĐỔI LOGIC JAVASCRIPT CHO TAB WEB**
+        document.getElementById('web-translation-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const outputArea = document.getElementById('web-output-area'); // Lấy textarea
+
+            outputArea.value = 'Extracting and translating website... Please wait.';
+
+            fetch('translate', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                return response.text(); // Lấy kết quả dưới dạng văn bản thuần túy
+            })
+            .then(translatedText => {
+                // Đưa văn bản đã dịch vào textarea
+                outputArea.value = translatedText;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                outputArea.value = 'Error during translation: ' + error.message;
+            });
+        });
 </script>
 
 </body>
