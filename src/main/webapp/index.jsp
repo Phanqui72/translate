@@ -492,21 +492,5 @@
     });
 </script>
 
-// Thêm một chút CSS cho link tải xuống vào file style.css của bạn
-/* Thêm vào cuối file css/style.css */
-.download-link {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 10px 15px;
-    background-color: var(--color-primary);
-    color: white;
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    transition: background-color var(--transition-speed) ease;
-}
-.download-link:hover {
-    background-color: var(--color-primary-dark);
-}
-
 </body>
 </html>

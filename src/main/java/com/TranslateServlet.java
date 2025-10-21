@@ -35,7 +35,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 
-import com.google.cloud.vision.v1.Page;
 import com.google.cloud.vision.v1.Block;
 import com.google.cloud.vision.v1.Paragraph;
 import com.google.cloud.vision.v1.Word;
@@ -48,6 +47,12 @@ import com.google.cloud.translate.v3.GcsSource;
 import com.google.cloud.translate.v3.TranslateDocumentRequest;
 import com.google.cloud.translate.v3.TranslateDocumentResponse;
 import java.util.concurrent.TimeUnit;
+
+import com.google.api.gax.paging.Page;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
+import java.io.FileNotFoundException;
 
 @WebServlet("/translate")
 @MultipartConfig
@@ -308,11 +313,12 @@ public class TranslateServlet extends HttpServlet {
                     .setMimeType(mimeType)
                     .build();
 
-            // Chỉ định THƯ MỤC đích để lưu file đã dịch.
-            // API sẽ tự động tạo tên file.
-            String outputGcsUriPrefix = "gs://" + BUCKET_NAME + "/translated_documents/";
+            // 1. Tạo một Job ID duy nhất cho lần dịch này
+            String jobId = UUID.randomUUID().toString();
+            // Chỉ định thư mục đích riêng biệt cho job này
+            String outputUriPrefix = "gs://" + BUCKET_NAME + "/translated_documents/" + jobId + "/";
 
-            GcsDestination gcsDestination = GcsDestination.newBuilder().setOutputUriPrefix(outputGcsUriPrefix).build();
+            GcsDestination gcsDestination = GcsDestination.newBuilder().setOutputUriPrefix(outputUriPrefix).build();
             DocumentOutputConfig outputConfig = DocumentOutputConfig.newBuilder()
                     .setGcsDestination(gcsDestination)
                     .build();
@@ -325,22 +331,31 @@ public class TranslateServlet extends HttpServlet {
                     .setDocumentOutputConfig(outputConfig)
                     .build();
 
-            // Gọi phương thức đồng bộ, nó sẽ tự chờ đến khi hoàn thành
-            TranslateDocumentResponse response = client.translateDocument(request);
+            System.out.println("Đang gửi yêu cầu dịch tài liệu...");
+            // 2. Gọi API và chờ hoàn tất
+            client.translateDocument(request);
+            System.out.println("Dịch hoàn tất. Đang tìm kiếm file kết quả...");
 
-            // *** DÒNG SỬA LỖI CUỐI CÙNG VÀ CHÍNH XÁC NHẤT ***
-            // Lấy đường dẫn đầy đủ của tệp đã dịch từ đối tượng response.
-            // Với thư viện mới, đây là phương thức đúng.
-            String translatedDocUri = response.getDocumentTranslation().getUri();
+            // 3. Tìm kiếm file kết quả thực sự trong thư mục đầu ra
+            Storage storage = StorageOptions.newBuilder().setProjectId(PROJECT_ID).build().getService();
+            // Prefix để tìm kiếm (loại bỏ phần gs://bucket-name/)
+            String prefixToSearch = "translated_documents/" + jobId + "/";
 
-            System.out.println("Tài liệu đã dịch được lưu tại: " + translatedDocUri);
+            Page<Blob> blobs = storage.list(BUCKET_NAME, Storage.BlobListOption.prefix(prefixToSearch));
 
-            return translatedDocUri;
+            for (Blob blob : blobs.iterateAll()) {
+                // Tìm thấy file! Đây chính là file đã dịch.
+                String finalPath = "gs://" + BUCKET_NAME + "/" + blob.getName();
+                System.out.println("Đã tìm thấy file kết quả: " + finalPath);
+                return finalPath;
+            }
+
+            throw new FileNotFoundException("Không tìm thấy file đã dịch trong thư mục: " + outputUriPrefix);
 
         } catch (Exception e) {
-            System.err.println("Lỗi trong quá trình dịch tài liệu: " + e.getMessage());
+            System.err.println("Lỗi chi tiết khi dịch tài liệu: " + e.getMessage());
             e.printStackTrace();
-            throw new IOException("Failed to translate document.", e);
+            throw new IOException("Failed to translate document: " + e.getMessage(), e);
         }
     }
 

@@ -335,3 +335,16 @@ footer {
     font-size: 13px;
     color: var(--color-text-secondary);
 }
+.download-link {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 15px;
+    background-color: var(--color-primary);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    transition: background-color var(--transition-speed) ease;
+}
+.download-link:hover {
+    background-color: var(--color-primary-dark);
+}
